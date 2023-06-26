@@ -1,70 +1,60 @@
 # Musinsa Crawling 
 
+## 01. crawler.py
 ```
-musinsa-crawling
-┣ save
-┣ src_
-┃ ┣ crawling.py
-┃ ┗ utils.py
-┣ poetry.lock
-┣ pyproject.toml
-┗ README.md
-```
-
-## 01. 사용법
-- `musinsa-crawling` 디렉토리로 이동
-```
-cd musinsa-crawling
+class : BaseCrwaler()
+┣ __init__ 
+┣ run : crwaling 실행
+┣ scrape_want_page : URL의 html scrape
+┣ make_rank_url : crwaling 할 상품 수 만큼 rank page url 생성
+┣ scrpae_goods_all_url : 생성한 rank page에서 상품 주소 srcape
+┣ scrape_goods_url : 개별 상품 페이지 주소 scrape
+┣ scrape_main_info : 상품 페이지 주소로 상품정보 scrape
+┣ check_info : crwaling 이후 누락된 정보 check
+┣ make_dataframe : crwaling한 정보를 dataframe으로 저장
+┗ do_thread_crawl : multiprocessing으로 crwaling method 처리
 ```
 
-- `poetry shell` 활성화 하기
-```
-poetry shell
-```
-
-- `src` 폴더로 이동
-```
-cd src
-```
-
-- `crawling.py` 실행 
-```
-python crawling.py {argsparser}
-```
-
-- `argsparser` 세부내용
-```
---save_path : csv, img 저장 경로 (defalut : ../save)
---category : crawling할 상품 카테고리
---crawling_num : crawling할 데이터 수
-```
-
----
-
-## 02. requirements
-`poetry.lock`와 `pyroject.toml` 참고
+## 02. utils.py
+- 기본설정 관련 method
 
 ```
-python = "^3.9"
-beautifulsoup4 = "^4.12.2"
-requests = "^2.31.0"
-selenium = "^4.10.0"
-pandas = "^2.0.2"
-torch = "^2.0.1"
-lxml = "^4.9.2"
-urllib3 = "^2.0.3"
-tqdm = "^4.65.0"
-progressbar = "^2.5"
+┣ parse_args : argparser 설정
+┣ setting_url : url 설정 
+┗ config_setting : config 설정
 ```
 
-- `poetry.lock`파일로부터 requirements.txt생성
-```
-poetry export -f requirements.txt > requirements.txt
-```
+## 03. main.py
+`: 크롤링 예시 코드`
 
-- 해당 패키지들 설치 방법
-`pyproject.toml` 파일이 있는 경로에서 아래 명령어 실행
 ```
-poetry install
-```
+#custom crawling method
+from musinsa import *
+from musinsa import BaseCrwaler
 
+#for play time
+import time
+import datetime
+
+if __name__ == "__main__":
+    start = time.time()
+    #parser 설정
+    args = parse_args()
+
+    #기본 정보 설정
+    config = config_setting(args)
+
+    #Crawlwer 설정
+    crawler = BaseCrwaler(config)
+
+    print(config)
+
+    #Crawling 
+    result = crawler.run()
+    end = time.time()
+
+    total_sec = end - start
+    result = str(datetime.timedelta(seconds=total_sec)).split('.')
+    print(f'crawling에 소요된 시간 : {result[0]}')
+
+```
