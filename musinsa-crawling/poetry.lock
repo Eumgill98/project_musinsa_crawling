@@ -599,6 +599,20 @@ test = ["hypothesis (>=6.34.2)", "pytest (>=7.0.0)", "pytest-asyncio (>=0.17.0)"
 xml = ["lxml (>=4.6.3)"]
 
 [[package]]
+name = "parmap"
+version = "1.6.0"
+description = "map and starmap implementations passing additional arguments and parallelizing if possible"
+optional = false
+python-versions = "*"
+files = [
+    {file = "parmap-1.6.0-py2.py3-none-any.whl", hash = "sha256:b7e05fa685ff0d5fba2f546bf9cdf64ae20eabf4f52be8139c44c58a3c30165f"},
+    {file = "parmap-1.6.0.tar.gz", hash = "sha256:3bc4444bcd8e95b030121adea470ad1d4d7aec6d05bf37989c3b85973a30dcf5"},
+]
+
+[package.extras]
+progress-bar = ["tqdm (>=4.8.4)"]
+
+[[package]]
 name = "progressbar"
 version = "2.5"
 description = "Text progress bar library for Python."
@@ -907,4 +921,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "586d2636a84e604c90e7312403762d57d44af7b0b039624f1354fc9987aa5392"
+content-hash = "27362ddcde5601b87a730c31a703e8b841bffb784de4f2f550c3d33694f01c39"
