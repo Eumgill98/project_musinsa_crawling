@@ -163,13 +163,13 @@ class BaseCrwaler():
             Exception: if len(info) > len(linkes) - ERROR
         """
         #linkes의 길이와 info의 길이가 같을때 까지 누락된 정보 탐색 
-        if isinstance(linkes, set):
+        if not isinstance(linkes, set):
             raise Exception('linkes가 set이 아닙니다')
         
-        if isinstance(key, set):
+        if not isinstance(keyes, set):
             raise Exception('key가 set이 아닙니다')
         
-        if isinstance(info, list):
+        if not isinstance(info, list):
             raise Exception('info가 list가 아닙니다')
 
         while len(linkes) != len(info):
