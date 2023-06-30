@@ -166,7 +166,7 @@ class BaseCrwaler():
         if not isinstance(linkes, set):
             raise Exception('linkes가 set이 아닙니다')
         
-        if not isinstance(key, set):
+        if not isinstance(keyes, set):
             raise Exception('key가 set이 아닙니다')
         
         if not isinstance(info, list):

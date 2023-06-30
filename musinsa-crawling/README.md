@@ -25,7 +25,6 @@ class : BaseCrwaler()
 ```
 
 ## 03. main.py
-
 `: 크롤링 예시 코드`
 
 ```

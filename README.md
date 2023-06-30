@@ -97,4 +97,3 @@ python main.py {argsparser}
 ```
 
 - 추가하고 싶은 상품 카테고리는 ./musinsa/utils.py/setting_url의 `url_dict`에 dict 형태로 추가해주면 됩니다 (**추후 추가해주는 메소드 구현 예정**) 
-
