@@ -25,7 +25,8 @@ class : BaseCrwaler()
 ```
 
 ## 03. main.py
-`: 크콜링 예시 코드`
+
+`: 크롤링 예시 코드`
 
 ```
 #custom crawling method
