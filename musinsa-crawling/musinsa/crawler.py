@@ -135,24 +135,44 @@ class BaseCrwaler():
         except:
             pass
 
-        #이미지와 제품정도 추출 
+        
         responses = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
         time.sleep(1)
 
         #세부 상품 page로 이동
         soup = BeautifulSoup(responses.text, 'lxml')
         informations = soup.find_all('div', attrs={'class':'product-img'})
+        meta_data = soup.find_all('a', attrs={'class':'listItem'})
 
+        temp = []
         for infoes in informations:
             for key in infoes:
                 try:
                     #img download
                     urlretrieve('https:' + key['src'], os.path.join(img_path, good_key+'.png'))
-                    info.append([key['alt'],'https:'+ key['src'], os.path.join(img_path, good_key+'.png')])
+                    temp.append(key['alt'])
+                    temp.append('https:'+ key['src'])
+                    temp.append(os.path.join(img_path, good_key+'.png'))
                     
                 except:
                     pass
         
+        #메타 데이터 추출
+        
+        if len(meta_data) != 0:
+            temp2 = []
+            for idx in range(len(meta_data)):
+                temp2.append(meta_data[idx].string)
+        else:
+            temp2 = None
+
+        temp.append(temp2)
+
+        #info list에 수집한 정보 저장
+        info.append(temp)
+
+    
+
         if len(info) % 50 == 0:
             print('현재 크롤링된 이미지 수 :', len(info))
 
@@ -210,20 +230,24 @@ class BaseCrwaler():
         df['key'] = sorted(list(key))
         df['link'] = sorted(list(linkes))
 
-        infoes = sorted(info, key=lambda x:x[2])
-    
+        infoes = sorted(info, key=lambda x:x[0])
+
+        #상품이름, 이미지링크, 저장주소, 메타데이터 dataframe에 저장
         temp_name = []
         temp_images = []
         temp_images_path = []
+        temp_meta = []
 
         for info in (infoes):
             temp_name.append(info[0])
             temp_images.append(info[1])
             temp_images_path.append(info[2])
+            temp_meta.append(info[3])
             
         df['name'] = temp_name
         df['image_link'] = temp_images
         df['path'] = temp_images_path
+        df['meta'] = temp_meta
     
         df.to_csv(os.path.join(config['SAVE_PATH'], 'csv', config['CATEGORY']+'.csv'), index=False)
 
