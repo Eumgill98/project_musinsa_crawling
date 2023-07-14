@@ -10,7 +10,7 @@ def parse_args():
     """
     parser = ArgumentParser()
 
-    parser.add_argument('--save_path', type=str, default='../save/', help='Crawling data save path')
+    parser.add_argument('--save_path', type=str, default='./save/', help='Crawling data save path')
     parser.add_argument('--category', type=str, default='Top', help='Goods category')
     parser.add_argument('--crawling_num', type=int, default=5000, help='Num of Crawling data')
 
@@ -59,7 +59,26 @@ def config_setting(args):
     return config
 
 
-        
-                    
-        
+def vton_parse_args():
+    
+    parser = ArgumentParser()
+
+    parser.add_argument('--save_path', type=str, default='./save/', help='Save data path')
+    parser.add_argument('--type', type=str, default='Codishop', help='What type Dataset Crawling ? [Codishop, BrandSnap]')
+    parser.add_argument('--category', type=list, default=['Top', 'Pants', 'Skirt'], help='What category do you Crawling?')
+    parser.add_argument('--crawling_page', type=int, default=1, help='Num of Crawling Page')
+
+    args = parser.parse_args()
+    return args
+
+def vton_setting_url(idx, args):
+
+    if args.type == 'Codishop':
+        URL = f'https://www.musinsa.com/app/styles/lists?use_yn_360=&style_type=&brand=&model=&tag_no=&max_rt=&min_rt=&display_cnt=60&list_kind=big&sort=date&page={idx}'
+    
+    elif args.type == 'BrandSnap':
+        URL = f'https://www.musinsa.com/mz/brandsnap?_m=&gender=&mod=&bid=&p={idx}'
+    
+    return URL
+    
 
