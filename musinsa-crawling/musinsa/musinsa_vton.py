@@ -48,8 +48,8 @@ class MusinsaVton():
         #최종 info
         self.final_url = list()
 
-        #json
-        self.json_dict = defaultdict(list)
+        self.c = 0
+        self.down_load_num = 0
 
             
     def run(self):
@@ -63,26 +63,24 @@ class MusinsaVton():
         print('-'*80)
 
         # 3. good url 만들기
-        self.do_thread_crawl(self.make_good_url, self.model_url,self.good_url, self.config.type)
+        self.do_thread_crawl(self.make_good_url, self.model_url, self.good_url, self.config.type)
         print('-'*80)
         print('크롤링 된 Goods page : ', len(self.good_url))
         print('-'*80)
 
-        pprint(self.good_url)
 
-        # 4. 이미지 다운 및 정보 저장
-        self.do_thread_crawl(self.down_load_img, self.good_url, self.json_dict)
+        # 4. 상품 정보 및 이미지 주소 저장
+        self.do_thread_crawl(self.make_img_url, self.good_url, self.final_url)
+        print('-'*80)
+        print('이미지 링크 수집 완료 : ', len(self.final_url))
+        print('-'*80)
+
+
+        # 5. 이미지 다운 및 정보 저장
+        self.do_thread_crawl(self.down_load_img, self.final_url)
         print('-'*80)
         print('이미지 다운로드 완료')
         print('-'*80)
-
-        # 5. json으로 정보저장
-        with open(os.path.join(self.config.save_path, 'vton', self.config.type+'.json'), 'w') as f:
-            json.dump(self.json_dict, f, indent=4)
-        
-        pprint(self.json_dict)
-        
-
 
     def scrape_want_page(self, url):
         response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -92,8 +90,10 @@ class MusinsaVton():
     
     def make_page_url(self, page_url, config):
 
-        how_much = config.crawling_page
-        for idx in range(1, how_much+1):
+        start = config.start
+        end = config.end
+
+        for idx in range(start, end):
             url = vton_setting_url(idx, config)
             page_url.append(url)
 
@@ -167,8 +167,15 @@ class MusinsaVton():
                                 for good in goods:
                                     url = f'https://www.musinsa.com/app/goods/{good}'
 
-                                    self.make_img(good_url, model_num, model_img_url, url)
+                                    temp_info = {
+                                        'model_id' : model_num, 
+                                        'model_img_url' : model_img_url,
+                                        'good_id' : good,
+                                        'good_url' : url,
+                                    }
 
+                                    good_url.append(temp_info)
+                                                        
                                     if len(good_url) % 100 == 0:
                                         print('크롤링 되고있는 Goods page : ', len(good_url))       
                                                
@@ -185,68 +192,86 @@ class MusinsaVton():
                 try:
                     url = 'https://www.musinsa.com/' + tag['href'][:-1]
                     
-                    self.make_img(good_url, model_num, model_img_url, url)
-                    
+                    temp_info = {
+                            'model_id' : model_num, 
+                            'model_img_url' : model_img_url,
+                            'good_id' : tag['href'][:-1].split('/')[-2],
+                            'good_url' : url,
+                            }
+
+                    good_url.append(temp_info)
+
                     if len(good_url) % 100 == 0:
                         print('크롤링 되고있는 Goods page : ', len(good_url))
                 except:
                     pass
 
-    def make_img(self, good_url, model_num, model_img_url, url):
-            soup2 = self.scrape_want_page(url)
+    def make_img_url(self, good_url_element, final_url):
+            soup2 = self.scrape_want_page(good_url_element['good_url'])
             category_tag = soup2.find_all('p', attrs={'class':'item_categories'})
-            good_category = list(f for f in category_tag[0])[1].string
 
-            if good_category in self.ok_category:
-                goods_list = soup2.find_all('ul', attrs={'class':'product_thumb'})[0].find_all('img')
+            try: 
+                good_category = list(f for f in category_tag[0])[1].string
 
-                temp_img_url_list = []
-                for tag in goods_list:
-                    img_link = 'https:' + tag['src'].replace('60.jpg', '500.jpg')
-                    temp_img_url_list.append(img_link)
+                if good_category in self.ok_category:
+                    goods_list = soup2.find_all('ul', attrs={'class':'product_thumb'})[0].find_all('img')
 
-                temp_info = {
-                    'model_id' : model_num, 
-                    'model_img_url' : model_img_url,
-                    'good_id' : url.split('/')[-1],
-                    'good_url' : url,
-                    'good_img_url' : temp_img_url_list,
-                    'category' : good_category
-                }
+                    temp_img_url_list = []
+                    for tag in goods_list:
+                        img_link = 'https:' + tag['src'].replace('60.jpg', '500.jpg')
+                        temp_img_url_list.append(img_link)
 
-                good_url.append({
-                    'key': model_num,
-                    'info': temp_info
-                })
+                    temp_info = {
+                        'model_id' : good_url_element['model_id'], 
+                        'model_img_url' : good_url_element['model_img_url'],
+                        'good_id' : good_url_element['good_id'],
+                        'good_url' : good_url_element['good_url'],
+                        'good_img_url' : temp_img_url_list,
+                        'category' : good_category
+                    }
 
-    def down_load_img(self, info, json_dict):
+                    final_url.append({
+                        'key': good_url_element['model_id'],
+                        'info': temp_info
+                    })
+
+                    if len(final_url) % 500 == 0:
+                        print('크롤링 되고있는 image_info : ', len(final_url))
+            except:
+                pass
+
+            self.c += 1
+
+            if self.c % 500 == 0:
+                print('진행률 :', self.c, '/', len(self.good_url))
+
+    def down_load_img(self, info):
         info = info['info']
-        img_list = info['good_img_url']
+        model_num = info['model_id']
+        img_list = info['good_img_url'] 
 
-        good_id = info['good_id']
         save_path = os.path.join(self.config.save_path, 'vton', self.config.type, self.category[info['category']], info['model_id'])
+        model_save = os.path.join(self.config.save_path, 'vton', self.config.type, 'model')
 
         # 저장경로 없으면 생성
         os.makedirs(save_path, exist_ok=True)
+        os.makedirs(model_save, exist_ok=True)
 
-        for idx, img in enumerate(img_list):
-            try:
-                urlretrieve(img, os.path.join(save_path, f'{good_id}_{idx}.jpg'))
-            except:
-                pass
-        
-        temp = {
-                'model_id' : info['model_id'],
-                'good_id' : info['good_id'],
-                'category' : self.category[info['category']],
-                'img_number' : len(img_list),
-                'save_path' : save_path.replace("\\", '/')
-            }
+        # 모델 이미지 다운
+        try:
+            urlretrieve(info['model_img_url'], os.path.join(model_save, f'{model_num}.jpg'))
+            for idx, img in enumerate(img_list):
 
-        json_dict['information'].append({'key': info['model_id'], 'info':temp})
+                # 상품 이미지 다운
+                urlretrieve(img, os.path.join(save_path, f'{model_num}_{idx}.jpg'))
+                self.down_load_num += 1
         
-        if len(json_dict['information']) % 100 ==0:
-            print(f'현재 다운 받은 상품 수 : ', len(json_dict['information']))
+        except:
+            pass
+        
+
+        if self.down_load_num % 10 ==0:
+            print(f'현재 다운 받은 상품 수 : ', self.down_load_num)
 
     def do_thread_crawl(self, func, listes, *args):
         """_summary_
