@@ -12,7 +12,7 @@ def parse_args():
 
     parser.add_argument('--save_path', type=str, default='./save/', help='Crawling data save path')
     parser.add_argument('--category', type=str, default='Top', help='Goods category')
-    parser.add_argument('--crawling_num', type=int, default=100, help='Num of Crawling data')
+    parser.add_argument('--crawling_num', type=int, default=1, help='Num of Crawling data')
 
     args = parser.parse_args()
     return args

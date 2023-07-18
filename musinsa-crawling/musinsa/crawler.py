@@ -2,6 +2,7 @@
 import time
 import os
 import pandas as pd
+from collections import defaultdict
 
 #crawling library
 from bs4 import BeautifulSoup
@@ -24,7 +25,7 @@ class BaseCrwaler():
         #crawling 정보 저장
         ##linkes의 경우 중복을 막기 위해서 set으로 지정
         self.rank_url = list()
-        self.linkes, self.key, self.info = set(), set(), []
+        self.linkes, self.key, self.price, self.info = set(), set(), defaultdict(), []
 
     def run(self):
         #1. 상품 url crawling
@@ -33,7 +34,7 @@ class BaseCrwaler():
  
         ## 1.2 저장된 url 리스트를 활용해서 상품주소 crawling 
         ### 멀티 프로세싱으로 처리
-        self.do_thread_crawl(self.scrape_goods_all_url, self.rank_url, self.linkes, self.key)
+        self.do_thread_crawl(self.scrape_goods_all_url, self.rank_url, self.linkes, self.price, self.key)
 
         print('-' * 80)            
         print('크롤링 된 상품 수 : ', len(self.linkes))
@@ -52,7 +53,7 @@ class BaseCrwaler():
         print('-' * 80)
 
         #4. 크롤링한 상품정보 DataFrame으로 저장
-        self.make_dataframe( self.linkes, self.key, self.info, self.config)
+        self.make_dataframe( self.linkes, self.key, self.info, self.price, self.config)
         print(f'상품 이미지와 상품정보 csv가 저장되었습니다!! 저장경로 :' + self.config['SAVE_PATH'])
 
     def scrape_want_page(self, url):
@@ -82,7 +83,7 @@ class BaseCrwaler():
             rank_url.append(now_url)
             
     
-    def scrape_goods_all_url(self, url, linkes, key):
+    def scrape_goods_all_url(self, url, linkes, price, key):
         """_summary_
 
         Args:
@@ -92,14 +93,14 @@ class BaseCrwaler():
         """
         soup = self.scrape_want_page(url)
 
-        self.scrape_goods_url(soup, linkes, key)
+        self.scrape_goods_url(soup, linkes, price, key)
         time.sleep(1)
         
         if len(linkes) % 100 == 0:
             print('현재 크롤링된 linkes 수 : ', len(linkes))
 
 
-    def scrape_goods_url(self, soup, linkes, key):
+    def scrape_goods_url(self, soup, linkes, price, key):
         """_summary_
 
         Args:
@@ -108,13 +109,28 @@ class BaseCrwaler():
             key (list): goods key save list
         """
         #a 태그에 img-block class를 불러와서 list로 저장
-        sorce = soup.find_all('a', attrs={'name':'goods_link'})
+        
+        sorce = soup.find_all('div', attrs={"class":"list-box box"})
 
-        #html에서 상품 url 추출
-        for t in sorce:
-            #제품 링크 추출
-            linkes.add('https:' + t['href'])
-            key.add(t['href'].split('/')[-1])
+        temp_link, temp_price = [], []
+        for i in sorce:
+            temp_link.append(i.find_all('a', attrs={"class": "img-block"}))
+            temp_price.append(i.find_all('p', attrs={"class": "price"}))
+
+        temp_link = temp_link[0]
+        temp_price = temp_price[0]
+
+        for idx, element in enumerate(temp_link):
+            linkes.add('https:' + element['href'])
+            key.add(element['href'].split('/')[-1])
+
+            tp = temp_price[idx].get_text().replace(' ', '').replace('\n', '')
+            if len(tp) == 3:
+                price[element['href'].split('/')[-1]] = tp[1]
+            else:
+                price[element['href'].split('/')[-1]] = tp[0]
+
+
 
     def scrape_main_info(self, url, info, config):
         """_summary_
@@ -142,6 +158,8 @@ class BaseCrwaler():
         #세부 상품 page로 이동
         soup = BeautifulSoup(responses.text, 'lxml')
         informations = soup.find_all('div', attrs={'class':'product-img'})
+        brands = soup.find_all('p', attrs={'class':'product_article_contents'})
+        categories = config['CATEGORY']
         meta_data = soup.find_all('a', attrs={'class':'listItem'})
 
         temp = []
@@ -156,9 +174,17 @@ class BaseCrwaler():
                     
                 except:
                     pass
-        
+
+        # 브랜드, 카테고리 저장
+        for f in brands[0]:
+            try:
+                temp.append(f.find('a').string)
+            except:
+                temp.append(None)
+
+        temp.append(categories)
+
         #메타 데이터 추출
-        
         if len(meta_data) != 0:
             temp2 = []
             for idx in range(len(meta_data)):
@@ -171,11 +197,10 @@ class BaseCrwaler():
         #info list에 수집한 정보 저장
         info.append(temp)
 
-    
 
         if len(info) % 50 == 0:
             print('현재 크롤링된 이미지 수 :', len(info))
-
+            
     def check_info(self, linkes, keyes, info, config):
         """_summary_
 
@@ -217,7 +242,7 @@ class BaseCrwaler():
             for key in leak:
                 self.scrape_main_info(BASE_URL + key, info, config)
 
-    def make_dataframe(self, linkes, key, info, config):
+    def make_dataframe(self, linkes, key, info, price, config):
         """_summary_
         save dataframe that made by goods info
         """
@@ -236,17 +261,27 @@ class BaseCrwaler():
         temp_name = []
         temp_images = []
         temp_images_path = []
+        temp_brand= []
+        temp_price = []
+        temp_category = []
         temp_meta = []
 
-        for info in (infoes):
+        for idx, info in enumerate(infoes):
             temp_name.append(info[0])
             temp_images.append(info[1])
             temp_images_path.append(info[2])
-            temp_meta.append(info[3])
+            temp_brand.append(info[3])
+            temp_category.append(info[4])
+            temp_price.append(price[sorted(list(key))[idx]])
+            temp_meta.append(info[5])
+            
             
         df['name'] = temp_name
         df['image_link'] = temp_images
         df['path'] = temp_images_path
+        df['brand'] = temp_brand
+        df['price'] = temp_price
+        df['category'] = temp_category
         df['meta'] = temp_meta
     
         df.to_csv(os.path.join(config['SAVE_PATH'], 'csv', config['CATEGORY']+'.csv'), index=False)
