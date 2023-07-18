@@ -26,5 +26,6 @@ if __name__ == "__main__":
     total_sec = end - start
     result = str(datetime.timedelta(seconds=total_sec)).split('.')
     print(f'crawling에 소요된 시간 : {result[0]}')
+    exit()
 
 
