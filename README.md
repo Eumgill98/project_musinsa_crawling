@@ -10,8 +10,10 @@ project_musinsa_crawling
 ┣ save : save csv and img
 ┣ musinsa-crawling
 ┃┣ main.py : crawling code example
-┃┣ musinsa : crawler package - source code
+┃┣ vton.py : musinsa viton data crawling code example
+┃┣ musinsa : source code
 ┃┃ ┣ __init__.py
+┃┃ ┣ musinsa_vton.py
 ┃┃ ┣ crawler.py
 ┃┃ ┗ utils.py
 ┃┣ poetry.lock
@@ -96,4 +98,29 @@ python main.py {argsparser}
 
 ```
 
-- 추가하고 싶은 상품 카테고리는 ./musinsa/utils.py/setting_url의 `url_dict`에 dict 형태로 추가해주면 됩니다 (**추후 추가해주는 메소드 구현 예정**) 
+## 5. Musinsa Viton Data Carawling
+
+```
+./musinsa-crawling/vton.py 
+```
+- 실행시 viton 모델 학습을 위한 데이터 셋 크롤링
+
+---
+
+- `argsparser` 세부내용
+```
+--save_path : 크롤링한 파일 저장 위치
+--type : 크롤링할 페이지 type (BrnadSnap, CodiShop 지원) 
+--category : 크롤링할 상품 카테고리 List -> 해당 list안에 있는 카테고리 상품만 수집
+--start : 크롤링할 페이지의 시작 페이지 
+--end : 크롤링할 페이지의 종료 페이지
+```
+- 크롤링 `시작` 과 `종료` 페이지로 구분한 이유는 많은 https를 요청하다 보니 메모리적인 문제와 네트워크에 부화가 와서 나눠서 크롤링하기 위해서
+
+---
+
+- 해당 클롤링 source code는 아래 경로에 존재
+```
+./musinsa-crawling/musinsa/musinsa_vton.py
+```
+- 크롤링한 데이터는 good-or-not 폴더에 있는 모델로 inference하여 판단

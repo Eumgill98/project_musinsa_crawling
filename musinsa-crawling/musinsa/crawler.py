@@ -77,8 +77,9 @@ class BaseCrwaler():
             rank_url (list): rank url save list
             config (dict): config setting
         """
-        how_much = (config['NUM'] // 90) + 1
-        for i in range(1, how_much+1):
+        start = config['START']
+        end = config['END']
+        for i in range(start, end+1):
             now_url = setting_url(i, config['CATEGORY'])
             rank_url.append(now_url)
             
@@ -126,9 +127,9 @@ class BaseCrwaler():
 
             tp = temp_price[idx].get_text().replace(' ', '').replace('\n', '')
             if len(tp) == 3:
-                price[element['href'].split('/')[-1]] = tp[1]
+                price[element['href'].split('/')[-1]] = tp.split('원')[1]
             else:
-                price[element['href'].split('/')[-1]] = tp[0]
+                price[element['href'].split('/')[-1]] = tp.split('원')[0]
 
 
 
@@ -160,6 +161,7 @@ class BaseCrwaler():
         informations = soup.find_all('div', attrs={'class':'product-img'})
         brands = soup.find_all('p', attrs={'class':'product_article_contents'})
         categories = config['CATEGORY']
+        subcategories = soup.find_all('p', attrs={'class':'item_categories'})
         meta_data = soup.find_all('a', attrs={'class':'listItem'})
 
         temp = []
@@ -168,6 +170,7 @@ class BaseCrwaler():
                 try:
                     #img download
                     urlretrieve('https:' + key['src'], os.path.join(img_path, good_key+'.png'))
+                    temp.append(good_key)
                     temp.append(key['alt'])
                     temp.append('https:'+ key['src'])
                     temp.append(os.path.join(img_path, good_key+'.png'))
@@ -176,13 +179,22 @@ class BaseCrwaler():
                     pass
 
         # 브랜드, 카테고리 저장
-        for f in brands[0]:
-            try:
+        try:
+            for f in brands[0]:
                 temp.append(f.find('a').string)
-            except:
+        except:
                 temp.append(None)
 
         temp.append(categories)
+
+        # 서브 카테고리 저장
+        subcategory = list(f for f in subcategories[0])
+        if len(subcategory) == 7:
+            temp.append(subcategory[3].string)
+        elif len(subcategory) == 9:
+            temp.append(subcategory[5].string)
+        else:
+            temp.append(None)
 
         #메타 데이터 추출
         if len(meta_data) != 0:
@@ -256,6 +268,8 @@ class BaseCrwaler():
         df['link'] = sorted(list(linkes))
 
         infoes = sorted(info, key=lambda x:x[0])
+        
+
 
         #상품이름, 이미지링크, 저장주소, 메타데이터 dataframe에 저장
         temp_name = []
@@ -264,16 +278,18 @@ class BaseCrwaler():
         temp_brand= []
         temp_price = []
         temp_category = []
+        temp_subcategory = []
         temp_meta = []
 
         for idx, info in enumerate(infoes):
-            temp_name.append(info[0])
-            temp_images.append(info[1])
-            temp_images_path.append(info[2])
-            temp_brand.append(info[3])
-            temp_category.append(info[4])
+            temp_name.append(info[1])
+            temp_images.append(info[2])
+            temp_images_path.append(info[3])
+            temp_brand.append(info[4])
+            temp_category.append(info[5])
+            temp_subcategory.append(info[6])
             temp_price.append(price[sorted(list(key))[idx]])
-            temp_meta.append(info[5])
+            temp_meta.append(info[7])
             
             
         df['name'] = temp_name
@@ -282,9 +298,10 @@ class BaseCrwaler():
         df['brand'] = temp_brand
         df['price'] = temp_price
         df['category'] = temp_category
+        df['subcategory'] = temp_subcategory
         df['meta'] = temp_meta
     
-        df.to_csv(os.path.join(config['SAVE_PATH'], 'csv', config['CATEGORY']+'.csv'), index=False)
+        df.to_csv(os.path.join(config['SAVE_PATH'], 'csv', config['CATEGORY']+str(config['START']) + '_' + str(config['END']) + '.csv'), index=False)
 
     def do_thread_crawl(self, func, listes, *args):
         """_summary_
