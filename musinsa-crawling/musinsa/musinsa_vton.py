@@ -259,11 +259,11 @@ class MusinsaVton():
 
         # 모델 이미지 다운
         try:
-            urlretrieve(info['model_img_url'], os.path.join(model_save, f'{model_num}.jpg'))
+            urlretrieve(info['model_img_url'], os.path.join(model_save, f'{model_num}.png'))
             for idx, img in enumerate(img_list):
 
                 # 상품 이미지 다운
-                urlretrieve(img, os.path.join(save_path, f'{model_num}_{idx}.jpg'))
+                urlretrieve(img, os.path.join(save_path, f'{model_num}_{idx}.png'))
                 self.down_load_num += 1
         
         except:

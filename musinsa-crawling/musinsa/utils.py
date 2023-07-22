@@ -11,8 +11,9 @@ def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument('--save_path', type=str, default='./save/', help='Crawling data save path')
-    parser.add_argument('--category', type=str, default='Top', help='Goods category')
-    parser.add_argument('--crawling_num', type=int, default=1, help='Num of Crawling data')
+    parser.add_argument('--category', type=str, default='Pants', help='Goods category')
+    parser.add_argument('--start', type=int, default=91, help='start page')
+    parser.add_argument('--end', type=int, default=100, help='end page')
 
     args = parser.parse_args()
     return args
@@ -52,7 +53,8 @@ def config_setting(args):
     config = defaultdict()
 
     config['URL'] = setting_url(1, args.category)
-    config['NUM'] = args.crawling_num
+    config['START'] = args.start
+    config['END'] = args.end
     config['CATEGORY'] = args.category
     config['SAVE_PATH'] = args.save_path
 
@@ -65,9 +67,9 @@ def vton_parse_args():
 
     parser.add_argument('--save_path', type=str, default='./save/', help='Save data path')
     parser.add_argument('--type', type=str, default='BrandSnap', help='What type Dataset Crawling ? [Codishop, BrandSnap]')
-    parser.add_argument('--category', type=list, default=['Top', 'Pants', 'Skirt'], help='What category do you Crawling?')
-    parser.add_argument('--start', type=int, default=71, help='start page')
-    parser.add_argument('--end', type=int, default=80, help='end page')
+    parser.add_argument('--category', type=list, default=['Top', 'Pants'], help='What category do you Crawling?')
+    parser.add_argument('--start', type=int, default=50, help='start page')
+    parser.add_argument('--end', type=int, default=60, help='end page')
 
     args = parser.parse_args()
     return args
